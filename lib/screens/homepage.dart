@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:chips_choice/chips_choice.dart';
+import 'package:test_assignment/globalVariables.dart';
 import 'package:test_assignment/model/index.dart';
 import 'package:test_assignment/utils/apihandler.dart';
 import 'package:test_assignment/utils/driverprofilecard.dart';
@@ -13,23 +14,38 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
+} 
+
 class _HomePageState extends State<HomePage> {
   Future<Filter>? driverInfo;
-  //Future<Cardetails>? carInfo;
 
   @override
   void initState() {
     super.initState();
-    driverInfo = api().fetchDriverInfo();
-    //carInfo = api().fetchCarInfo();
+    getData();
+
   }  
+
+  getData() async {
+    driverInfo = api().fetchDriverInfo();
+  }
+
+  void clearText(){
+    _startDate.clear();
+    _endDate.clear();
+    _startTime.clear();
+    _endTime.clear();
+    _driver.clear();
+    _license.clear();
+  }
+
+  bool isVisible = false;
   int tag = 3;
-   List<String> options = [
-    "David",
-    'AA 99 999',
-    '11. Jan 2023',
-    '8:00'
-  ];
+  String chosenlicence = "";
+  String chosenDriver = "";
    TextEditingController _startDate = TextEditingController();
    TextEditingController _endDate = TextEditingController();
    TextEditingController _startTime = TextEditingController();
@@ -43,9 +59,10 @@ class _HomePageState extends State<HomePage> {
     return  SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
-          title: const Center(child: Text("Shift Planner", style: TextStyle(fontSize: 35, fontFamily: 'Euclid', fontWeight: FontWeight.bold ))),
+          title: const  Text("Shift Planner", style: TextStyle(fontSize: 28.8, fontFamily: 'Euclid Regular', fontWeight: FontWeight.bold )),
         ),
         body:  Column(
             children: [
@@ -76,15 +93,17 @@ class _HomePageState extends State<HomePage> {
                             width: width* 0.1,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(5),
-                              color: const Color.fromRGBO(248, 152, 24, 100),
+                              color: const Color(0xffF89818),
                             ),
-                            child: IconButton(icon: const Icon(Icons.tune),
+                            child: IconButton(icon: const Icon(Icons.tune, color: Colors.white,),
                             onPressed: () {
                               showDialog(context: context, builder: (context)=> Dialog(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    child: SizedBox(
+    child: Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.white),
+      
       height: height* 0.6,
-      width: width*0.8,
+      width: width*0.9,
       child: Padding(padding: EdgeInsets.all(8),
       child: Column(
         //mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -92,7 +111,17 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text("Filter", style: TextStyle(fontSize: 20, fontFamily: 'Euclid', fontWeight: FontWeight.bold )),
+            children: [ SizedBox(child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [SizedBox(width: 10,),
+                Text("Filter", style: TextStyle(fontSize: 20, fontFamily: 'Euclid', fontWeight: FontWeight.bold )),
+                SizedBox(width: 10,),
+              GestureDetector(
+                onTap: () {
+                  clearText();
+                },
+                child: Text("Clear", style: TextStyle(fontSize: 16, fontFamily: 'Euclid', color:Color(0xffFF6368), fontWeight: FontWeight.w500))),],
+            )),
               IconButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -112,16 +141,19 @@ class _HomePageState extends State<HomePage> {
                   height: height*0.09,
                   width: width*0.35,
                   child: TextField(
+                    enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                     controller: _startDate,
                     decoration: const InputDecoration(
                       suffixIcon: Icon(Icons.date_range_rounded),
                       labelText: "Start Date"
                     ),
                     onTap: () async {
-                      DateTime? pickDate = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2101));
-                      if (pickDate!= null){
+                      DateTime? pickStartDate = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2101));
+                      if (pickStartDate!= null){
                         setState(() {
-                          _startDate.text = formatDate(pickDate, [dd, ".", MM," ", yyyy]);
+                          _startDate.text = formatDate(pickStartDate, [dd, ".", MM," ", yyyy]);
+                          globalvariables.addData(_startDate.text);
                         });
                       }
                     },
@@ -131,6 +163,8 @@ class _HomePageState extends State<HomePage> {
                   height: height*0.09,
                   width: width*0.35,
                   child: TextField(
+                    enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                     controller: _endDate,
                     decoration: const InputDecoration(
                       suffixIcon: Icon(Icons.date_range_rounded),
@@ -140,7 +174,8 @@ class _HomePageState extends State<HomePage> {
                       DateTime? pickDate = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2101));
                       if (pickDate!= null){
                         setState(() {
-                          _startDate.text = formatDate(pickDate, [dd, ".", MM," ", yyyy]);
+                          _endDate.text = formatDate(pickDate, [dd, ".", MM," ", yyyy]);
+                          globalvariables.addData(_endDate.text);
                         });
                       }
                     },
@@ -156,6 +191,8 @@ class _HomePageState extends State<HomePage> {
                   height: height*0.09,
                   width: width*0.35,
                   child: TextField(
+                    enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                     controller: _startTime,
                     decoration: const InputDecoration(
                       suffixIcon: Icon(Icons.watch_later_rounded),
@@ -166,6 +203,7 @@ class _HomePageState extends State<HomePage> {
                       if (pickTime!= null){
                         setState(() {
                           _startTime.text = '${pickTime.hour.toString()}:${pickTime.minute.toString()}';
+                          globalvariables.addData(_startTime.text);
                         });
                       }
                     },
@@ -175,6 +213,8 @@ class _HomePageState extends State<HomePage> {
                   height: height*0.09,
                   width: width*0.35,
                   child: TextField(
+                    enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                     controller: _endTime,
                     decoration: const InputDecoration(
                       suffixIcon: Icon(Icons.watch_later_rounded),
@@ -185,6 +225,7 @@ class _HomePageState extends State<HomePage> {
                       if (pickTime!= null){
                         setState(() {
                           _endTime.text = '${pickTime.hour.toString()}:${pickTime.minute.toString()}';
+                          globalvariables.addData(_endTime.text);
                         });
                       }
                     },
@@ -199,6 +240,8 @@ class _HomePageState extends State<HomePage> {
                     height: height*0.09,
                     width: width*0.7,
                     child: TextField(
+                      enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                       controller: _license,
                       decoration: const InputDecoration(
                         suffixIcon: Icon(Icons.chevron_right_rounded),
@@ -206,9 +249,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onTap: () async {
                         showDialog(context: context, builder: (context)=> Dialog(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          child: SizedBox(
+                                          child: Container(
                                               height: height* 0.5,
                                                    width: width*0.8,
+                                                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                                                child: Padding(padding: EdgeInsets.all(8),
                                              child: Column(
                                               //mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -248,31 +292,49 @@ class _HomePageState extends State<HomePage> {
                 ),
                           ),
                           SizedBox(height: height*0.01,),
-                    //       Expanded(child: Container(
-                    //         width: width*0.8,
-                    //         child: FutureBuilder<Cardetails>(builder: (BuildContext context, snapshot){
-                    //           if(snapshot.hasError){
-                    //   return Center(child: Text(snapshot.error.toString()),);
-                    // }if(snapshot.hasData){
-                    //   return ListView.builder(itemCount: snapshot.data!.data!.cars.length,itemBuilder: (BuildContext context, i){
-                    //     return Padding(
-                    //       padding: const EdgeInsets.only(top: 10),
-                    //       child: Container(
-                    //         height: height*0.1,
-                    //         width: width*0.5,
-
-                    //         child: Center(child: Text(snapshot.data!.data![i].cars.toString()),),
-                    //       )
-                    //     );
-                    //   });
-                    // }
-                    // return const CircularProgressIndicator();
-                    //         }),
-                    //       ))
-                
             ],
           ),
-          
+          SizedBox(height: height*0.01,),
+          Expanded(child: ListView.builder(itemCount: globalvariables.licenseNo.length ,itemBuilder: (context,i){
+              return Padding(padding: EdgeInsets.all(8),
+              child: Container(
+                  height: height*0.035,
+                  width: width*0.4,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(globalvariables.licenseNo[i], style: TextStyle(fontFamily: 'Euclid Regular',fontSize: 18)),
+                      Radio(
+                        value: i,
+                        groupValue: chosenlicence,
+                        onChanged: (value) {
+                          chosenlicence = i.toString();
+                          _license.text = globalvariables.licenseNo[i];
+                          globalvariables.addData(_license.text);
+                        },
+                      )
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  
+                  Navigator.of(context).pop();
+                });
+              },
+              child: Container(
+                height: height*0.05,
+                width: width*0.3,
+                decoration: BoxDecoration(color: const Color(0xffF89818), borderRadius: BorderRadius.circular(5)),
+                child: Center(child: Text("Submit", style: TextStyle(fontFamily: 'Euclid Regular',fontSize: 16, color: Colors.white),),),
+              ),
+            ),
+          )
         ],
       ),
       ),
@@ -289,13 +351,116 @@ class _HomePageState extends State<HomePage> {
             height: height*0.09,
                     width: width*0.7,
                     child: TextField(
+                      enableInteractiveSelection: false,
+                    focusNode: AlwaysDisabledFocusNode(),
                       controller: _driver,
                       decoration: const InputDecoration(
                         suffixIcon: Icon(Icons.chevron_right_rounded),
                         labelText: "Select Driver"
                       ),
+                      onTap: () async {
+                        
+                        showDialog(context: context, builder: (context)=> Dialog(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          child: Container(
+                                              height: height* 0.4,
+                                                   width: width*0.8,
+                                                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                                               child: Padding(padding: EdgeInsets.all(8),
+                                             child: Column(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                           children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [Text("Select Driver", style: TextStyle(fontSize: 20, fontFamily: 'Euclid', fontWeight: FontWeight.bold )),
+              IconButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.black,
+                              ),
+                            )
+            ],
+          ),
+          SizedBox(height: height*0.01,),
+          Row(
+            children: [
+                          SizedBox(height: height*0.01,),
+            ],
+          ),
+          SizedBox(height: height*0.01,),
+          Expanded(child: ListView.builder(itemCount: globalvariables.driver.length ,itemBuilder: (context,i){
+              return Padding(padding: EdgeInsets.all(8),
+              child: Container(
+                  height: height*0.035,
+                  width: width*0.4,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(globalvariables.driver[i], style: TextStyle(fontFamily: 'Euclid Regular',fontSize: 18)),
+                      Radio(
+                        value: i,
+                        groupValue: chosenDriver,
+                        onChanged: (value) {
+                          chosenDriver = i.toString();
+                          _driver.text = globalvariables.driver[i];
+                        },
+                      )
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  globalvariables.addData(_driver.text);
+                  Navigator.of(context).pop();
+                });
+              },
+              child: Container(
+                height: height*0.05,
+                width: width*0.3,
+                decoration: BoxDecoration(color: const Color(0xffF89818), borderRadius: BorderRadius.circular(5)),
+                child: Center(child: Text("Submit", style: TextStyle(fontFamily: 'Euclid Regular',fontSize: 16, color: Colors.white),),),
+              ),
+            ),
+          )
+        ],
+      ),
+      ),
+    ),
+  ) 
+  
+  );
+                      },
                     )
-          ),)
+          ),),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  //globalvariables.startDate= _startDate.text;
+                  if(isVisible== true){
+                    Navigator.of(context).pop();
+                  }else{
+                  isVisible = !isVisible;
+                  Navigator.of(context).pop();
+                  }
+                });
+              },
+              child: Container(
+                height: height*0.05,
+                width: width*0.3,
+                decoration: BoxDecoration(color: const Color(0xffF89818), borderRadius: BorderRadius.circular(5)),
+                child: Center(child: Text("Apply", style: TextStyle(fontFamily: 'Euclid',fontSize: 16, color: Colors.white),),),
+              ),
+            ),
+          )
         ],
       ),
       ),
@@ -308,31 +473,54 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              Container(
-                height: height*0.13,
-                width: width*0.9,
-                child: 
-                   ChipsChoice<int>.single(
-                    
-                        value: tag,
-                        onChanged: (val) => setState(() => tag = val),
-                        choiceItems: C2Choice.listFrom<int, String>(
-                          source: options,
-                          value: (i, v) => i,
-                          label: (i, v) => v,
-                          tooltip: (i, v) => v,
-                          delete: (i, v) => () {
-                            setState(() => options.removeAt(i));
-                          },
-                        ),
-                        choiceStyle: C2ChipStyle.toned(
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(5),
-                          ),
-                        ),
-                        wrapped: true,
-                      ),
+              if (globalvariables.options.isNotEmpty)Visibility(
+                visible: isVisible,
+                child: Container(
+                  //height: height*0.25,
+                  width: width*0.9,
+                  child: 
+                     Wrap(
+                      direction: Axis.horizontal,
+                       children: [
+                         ChipsChoice<int>.single(
+                          
+                              value: tag,
+                              onChanged: (val) => setState(() => tag = val),
+                              choiceItems: C2Choice.listFrom<int, String>(
+                                source: globalvariables.options,
+                                value: (i, v) => i,
+                                label: (i, v) => v,
+                                tooltip: (i, v) => v,
+                                delete: (i, v) => () {
+                                  setState(() => globalvariables.options.removeAt(i));
+                                },
+                              ),
+                              choiceStyle: C2ChipStyle.outlined(
+                                borderOpacity: 0.3,
+                                borderStyle: BorderStyle.solid,
+                                color: Colors.black,
+                                iconColor: const Color(0xffFF6368),
+                                iconSize: 22,
+                                selectedStyle: C2ChipStyle.filled(
+                                  foregroundStyle:  const TextStyle(fontSize: 16.8,fontFamily: 'Euclid',color: Colors.white),
+                                  iconColor: Colors.white,
+                                  color: const Color(0xffFF6368)
+                                ),
+                                foregroundStyle: const TextStyle(fontSize: 16.8,fontFamily: 'Euclid',color: Colors.black),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(15),
+                                ),
+                              ),
+                              wrapped: true,
+                            ),
+                       ],
+                     ),
+                ),
               ),
+              const Align(alignment: Alignment.centerLeft,child: Padding(
+                padding: EdgeInsets.only(left:22.0),
+                child: Text("Available Shift",style: TextStyle(fontSize: 21, fontFamily: 'Euclid', fontWeight: FontWeight.bold, color: Colors.black),),
+              )),
               Expanded(
                 child: Container(
                   //color: Colors.amber,
@@ -350,7 +538,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       });
                     }
-                    return Center(child: const CircularProgressIndicator());
+                    return  Center(child: const CircularProgressIndicator());
                   }),
                 ),
               )
@@ -360,3 +548,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+
